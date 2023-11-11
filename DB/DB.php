@@ -14,8 +14,15 @@ class DB
         }
     }
 
-    public function connect(){
-        return  $this->connection;
+    public function getPdoConnection(): PDO
+    {
+        return $this->connection;
     }
 
+    // Если нужно использовать именно метод connect, то можно оставить его, но лучше использовать getPdoConnection
+    public function connect(): PDO
+    {
+        return $this->getPdoConnection();
+    }
 }
+?>

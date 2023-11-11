@@ -1,7 +1,7 @@
-<?php
+<!-- <?php
 session_start();
 echo $_SESSION['userName'];
-?>
+?> -->
     <!DOCTYPE html>
     <html lang="en">
     <head>
@@ -37,30 +37,44 @@ echo $_SESSION['userName'];
     </body>
     </html>
 <?php
+session_start();
+
 include_once '../DB/DB.php';
-$db = new DB("test", "localhost");
-$connect = $db->connect();
+include_once '../OOP/User.php'; // Подключаем файл с классом User
+
+$db = new DB("games_app_dump", "localhost");
+$pdo = $db->getPdoConnection(); // Получаем объект PDO
+
+$userHandler = new User($db);
 
 if (isset($_POST["formSend"])) {
     if (empty($_POST["login"]) || empty($_POST["pass"])) {
-        echo '<div class="alert alert-danger" role="alert"> Error: введите логин и пароль</div>';
-
+        echo '<div class="alert alert-danger" role="alert">Ошибка: введите логин и пароль</div>';
     } else {
-        $row = $connect->query("SELECT * FROM `user` WHERE `login` = {$_POST["login"]} AND `password` = {$_POST["pass"]}");
-        $user = $row->fetch();
-        echo '<div class="alert alert-success" role="alert">Привет, ' . $user["name"] . '</div>';
-        $_SESSION['userName'] = $user["name"];
-    }
+        $username = $_POST["login"];
+        $password = $_POST["pass"];
 
-
-    function printAllUsers($connect)
-    {
-        echo "Пользователи: <br>";
-        foreach ($connect->query('SELECT * from user') as $row) {
-            echo $row["login"] . " - " . $row["password"] . "<br>";
+        if ($userHandler->login($username, $password)) {
+            echo '<div class="alert alert-success" role="alert">Привет, ' . $username . '</div>';
+            $_SESSION['userName'] = $username;
+            printAllUsers($db->getPdoConnection());
+        } else {
+            echo '<div class="alert alert-danger" role="alert">Ошибка входа</div>';
         }
     }
-
-    printAllUsers($connect);
-
 }
+
+
+function printAllUsers($connect)
+{
+    echo "Пользователи: <br>";
+    $stmt = $connect->prepare('SELECT * FROM user');
+    $stmt->execute();
+
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        echo $row["nickname"] . " - " . $row["password"] . "<br>";
+    }
+}
+
+
+
